@@ -21,8 +21,11 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android platform 34 (if missing)
+        run: |
+          if [ ! -d "$ANDROID_HOME/platforms/android-34" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" > /dev/null || true
+          fi
 
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
