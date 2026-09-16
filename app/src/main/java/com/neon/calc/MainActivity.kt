@@ -4,6 +4,12 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
+import com.google.android.gms.ads.InterstitialAd
+import com.google.android.gms.ads.InterstitialAdLoadCallback
+import com.google.android.gms.ads.LoadAdError
+import com.google.android.gms.ads.MobileAds
 import java.util.Locale
 import kotlin.math.abs
 
@@ -15,6 +21,9 @@ class MainActivity : AppCompatActivity() {
     private var waitingForNumber = false
     private var justEvaluated = false
 
+    private var equalsCount = 0
+    private var interstitialAd: InterstitialAd? = null
+
     private lateinit var tvExpression: TextView
     private lateinit var tvResult: TextView
 
@@ -23,6 +32,11 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         tvExpression = findViewById(R.id.tvExpression)
         tvResult = findViewById(R.id.tvResult)
+
+        MobileAds.initialize(this) { }
+        findViewById<AdView>(R.id.adView).loadAd(AdRequest.Builder().build())
+        loadInterstitialAd()
+
         render()
     }
 
@@ -88,6 +102,7 @@ class MainActivity : AppCompatActivity() {
             waitingForNumber = true
             justEvaluated = true
             tvResult.text = fmt(result)
+            maybeShowInterstitial()
             return
         }
         render()
@@ -117,6 +132,32 @@ class MainActivity : AppCompatActivity() {
         if (isError() || current.isEmpty()) return
         current = fmt(current.toDouble() / 100.0)
         render()
+    }
+
+    private fun maybeShowInterstitial() {
+        equalsCount++
+        if (equalsCount >= INTERSTITIAL_EVERY) {
+            equalsCount = 0
+            interstitialAd?.show(this)
+            loadInterstitialAd()
+        }
+    }
+
+    private fun loadInterstitialAd() {
+        InterstitialAd.load(
+            this,
+            INTERSTITIAL_AD_UNIT_ID,
+            AdRequest.Builder().build(),
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(ad: InterstitialAd) {
+                    interstitialAd = ad
+                }
+
+                override fun onAdFailedToLoad(error: LoadAdError) {
+                    interstitialAd = null
+                }
+            }
+        )
     }
 
     private fun applyOp(a: Double, b: Double, op: String): Double = when (op) {
@@ -179,5 +220,9 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val ERROR_TEXT = "Oops! \uD83D\uDE05"
+        // Google TEST ad unit IDs - replace with real AdMob IDs before production
+        private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
+        private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+        private const val INTERSTITIAL_EVERY = 5
     }
 }
