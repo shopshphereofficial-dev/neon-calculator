@@ -282,9 +282,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val ERROR_TEXT = "Oops! \uD83D\uDE05"
         private const val PREFS_NAME = "neon_calc_state"
-        // Interstitial still uses Google's TEST id - swap for the real
-        // interstitial ad unit id once one is created in AdMob.
-        private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
+        // Real AdMob interstitial ad unit ID
+        private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-7206645274499834/4544638793"
         private const val INTERSTITIAL_EVERY = 5
     }
 }

@@ -36,13 +36,13 @@ jobs:
         run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Rename APK
-        run: cp app/build/outputs/apk/debug/app-debug.apk Neon-Calculator-v1.2.apk
+        run: cp app/build/outputs/apk/debug/app-debug.apk Neon-Calculator-v1.3.apk
 
       - name: Create release with APK
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v1.2 Neon-Calculator-v1.2.apk \
-            --title "Neon Calculator v1.2 (real ads + memory + live preview)" \
-            --notes "Real AdMob banner ads, last-calculation memory, live result preview. Debug APK for Android 8.0+." \
-            || gh release upload v1.2 Neon-Calculator-v1.2.apk --clobber
+          gh release create v1.3 Neon-Calculator-v1.3.apk \
+            --title "Neon Calculator v1.3 (all real ads)" \
+            --notes "Real AdMob banner + interstitial ads, memory, live preview. Debug APK for Android 8.0+." \
+            || gh release upload v1.3 Neon-Calculator-v1.3.apk --clobber
