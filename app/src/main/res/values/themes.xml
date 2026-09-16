@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.NeonCalc" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@drawable/bg_gradient</item>
+        <item name="android:statusBarColor">@color/bg_end</item>
+        <item name="android:navigationBarColor">@color/bg_end</item>
+    </style>
+
+    <style name="CalcButton" parent="android:Widget.Material.Button">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:layout_margin">5dp</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:minWidth">0dp</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:background">@drawable/bg_btn_number</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="CalcButton.Operator">
+        <item name="android:background">@drawable/bg_btn_operator</item>
+        <item name="android:shadowColor">#662EE6FF</item>
+        <item name="android:shadowRadius">12</item>
+    </style>
+
+    <style name="CalcButton.Equals">
+        <item name="android:background">@drawable/bg_btn_equals</item>
+        <item name="android:shadowColor">#B3FFFFFF</item>
+        <item name="android:shadowRadius">14</item>
+        <item name="android:textSize">34sp</item>
+    </style>
+
+    <style name="CalcButton.Clear">
+        <item name="android:background">@drawable/bg_btn_clear</item>
+    </style>
+
+    <style name="CalcButton.Back">
+        <item name="android:background">@drawable/bg_btn_back</item>
+        <item name="android:textColor">@color/neon_yellow</item>
+    </style>
+
+    <style name="CalcButton.Percent">
+        <item name="android:background">@drawable/bg_btn_percent</item>
+        <item name="android:textColor">@color/neon_lime</item>
+    </style>
+
+</resources>

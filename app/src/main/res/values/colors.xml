@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="bg_start">#1A0040</color>
+    <color name="bg_end">#0D0221</color>
+    <color name="neon_pink">#FF2E9A</color>
+    <color name="neon_purple">#B537F2</color>
+    <color name="neon_cyan">#2EE6FF</color>
+    <color name="neon_lime">#9BFF2E</color>
+    <color name="neon_orange">#FF7A2E</color>
+    <color name="neon_yellow">#FFE32E</color>
+    <color name="btn_dark">#F02A0A4A</color>
+    <color name="ic_launcher_bg">#B537F2</color>
+</resources>
