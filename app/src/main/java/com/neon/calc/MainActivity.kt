@@ -1,13 +1,14 @@
 package com.neon.calc
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
-import com.google.android.gms.ads.InterstitialAd
-import com.google.android.gms.ads.InterstitialAdLoadCallback
+import com.google.android.gms.ads.interstitial.InterstitialAd
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.LoadAdError
 import com.google.android.gms.ads.MobileAds
 import java.util.Locale
@@ -26,18 +27,29 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvExpression: TextView
     private lateinit var tvResult: TextView
+    private lateinit var tvPreview: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         tvExpression = findViewById(R.id.tvExpression)
         tvResult = findViewById(R.id.tvResult)
+        tvPreview = findViewById(R.id.tvPreview)
 
         MobileAds.initialize(this) { }
         findViewById<AdView>(R.id.adView).loadAd(AdRequest.Builder().build())
         loadInterstitialAd()
 
+        restoreState()
         render()
+        if (justEvaluated && tvExpression.text.isEmpty()) {
+            tvExpression.text = tvResult.text
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        saveState()
     }
 
     fun onDigit(view: View) {
@@ -91,7 +103,6 @@ class MainActivity : AppCompatActivity() {
         if (accumulator != null && pendingOp.isNotEmpty() && current.isNotEmpty()) {
             val value = current.toDouble()
             val result = applyOp(accumulator!!, value, pendingOp)
-            tvExpression.text = "${fmt(accumulator!!)} ${opSymbol(pendingOp)} ${fmt(value)} ="
             if (result.isNaN() || result.isInfinite()) {
                 renderError()
                 return
@@ -102,6 +113,10 @@ class MainActivity : AppCompatActivity() {
             waitingForNumber = true
             justEvaluated = true
             tvResult.text = fmt(result)
+            // top expression line becomes the result, so the user can keep
+            // calculating from it (e.g. press + again)
+            tvExpression.text = fmt(result)
+            tvPreview.text = ""
             maybeShowInterstitial()
             return
         }
@@ -160,6 +175,38 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // ---- persistence: remember the last calculation ----
+
+    private fun saveState() {
+        val p = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+        p.putString("current", current)
+        p.putString("pendingOp", pendingOp)
+        if (accumulator != null) {
+            p.putString("accumulator", accumulator.toString())
+        } else {
+            p.remove("accumulator")
+        }
+        p.putBoolean("waiting", waitingForNumber)
+        p.putBoolean("justEvaluated", justEvaluated)
+        p.putString("expr", tvExpression.text.toString())
+        p.apply()
+    }
+
+    private fun restoreState() {
+        val p = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        current = p.getString("current", "") ?: ""
+        pendingOp = p.getString("pendingOp", "") ?: ""
+        accumulator = p.getString("accumulator", null)?.toDoubleOrNull()
+        waitingForNumber = p.getBoolean("waiting", false)
+        justEvaluated = p.getBoolean("justEvaluated", false)
+        val savedExpr = p.getString("expr", "") ?: ""
+        if (savedExpr.isNotEmpty()) {
+            tvExpression.text = savedExpr
+        }
+    }
+
+    // ---- core helpers ----
+
     private fun applyOp(a: Double, b: Double, op: String): Double = when (op) {
         "+" -> a + b
         "-" -> a - b
@@ -188,6 +235,7 @@ class MainActivity : AppCompatActivity() {
     private fun renderError() {
         tvResult.text = ERROR_TEXT
         tvExpression.text = ""
+        tvPreview.text = ""
         current = ""
         accumulator = null
         pendingOp = ""
@@ -213,15 +261,29 @@ class MainActivity : AppCompatActivity() {
         tvResult.text = resultText
         tvExpression.text = if (accumulator != null && pendingOp.isNotEmpty()) {
             "${fmt(accumulator!!)} ${opSymbol(pendingOp)}"
+        } else if (justEvaluated && current.isNotEmpty()) {
+            current
         } else {
             ""
+        }
+        updatePreview()
+    }
+
+    // live preview: shows "= 10" below while the user is typing "5 + 5"
+    private fun updatePreview() {
+        if (accumulator != null && pendingOp.isNotEmpty() && !waitingForNumber && current.isNotEmpty()) {
+            val r = applyOp(accumulator!!, current.toDouble(), pendingOp)
+            tvPreview.text = if (r.isNaN() || r.isInfinite()) "" else "= ${fmt(r)}"
+        } else {
+            tvPreview.text = ""
         }
     }
 
     companion object {
         private const val ERROR_TEXT = "Oops! \uD83D\uDE05"
-        // Google TEST ad unit IDs - replace with real AdMob IDs before production
-        private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
+        private const val PREFS_NAME = "neon_calc_state"
+        // Interstitial still uses Google's TEST id - swap for the real
+        // interstitial ad unit id once one is created in AdMob.
         private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
         private const val INTERSTITIAL_EVERY = 5
     }
