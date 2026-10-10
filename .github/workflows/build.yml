@@ -46,3 +46,11 @@ jobs:
             --title "Neon Calculator v1.3 (all real ads)" \
             --notes "Real AdMob banner + interstitial ads, memory, live preview. Debug APK for Android 8.0+." \
             || gh release upload v1.3 Neon-Calculator-v1.3.apk --clobber
+
+      - name: Publish standard app.apk release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          APK=$(find app/build/outputs/apk -name '*.apk' | head -1)
+          cp "$APK" app.apk
+          gh release create latest app.apk --title "Latest APK" --notes "Auto-built APK from source. Direct download." --latest 2>/dev/null || gh release upload latest app.apk --clobber
