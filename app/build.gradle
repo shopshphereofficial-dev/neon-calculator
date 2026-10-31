@@ -5,19 +5,35 @@ plugins {
 
 android {
     namespace 'com.neon.calc'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "com.neon.calc"
         minSdk 26
-        targetSdk 34
-        versionCode 4
-        versionName "1.3"
+        targetSdk 35
+        versionCode 5
+        versionName "1.4"
+    }
+
+    signingConfigs {
+        release {
+            // Set these in GitHub Actions secrets to build a Play-ready AAB.
+            def keystorePath = System.getenv("KEYSTORE_PATH")
+            if (keystorePath) {
+                storeFile file(keystorePath)
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             minifyEnabled false
+            if (System.getenv("KEYSTORE_PATH")) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {
