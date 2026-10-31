@@ -21,15 +21,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android platform 35 (and 34 as fallback)
+      - name: Install Android SDK platforms
         run: |
           SDK="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
-          if [ ! -d "$ANDROID_HOME/platforms/android-35" ]; then
-            yes | "$SDK" "platforms;android-35" "build-tools;35.0.0" > /dev/null || true
-          fi
-          if [ ! -d "$ANDROID_HOME/platforms/android-34" ]; then
-            yes | "$SDK" "platforms;android-34" > /dev/null || true
-          fi
+          yes | "$SDK" --licenses > /dev/null 2>&1 || true
+          yes | "$SDK" "platforms;android-35" "build-tools;35.0.0" > /dev/null 2>&1 || true
+          yes | "$SDK" "platforms;android-34" > /dev/null 2>&1 || true
+          ls "$ANDROID_HOME/platforms"
 
       - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
@@ -42,33 +40,14 @@ jobs:
       - name: Rename APK
         run: cp app/build/outputs/apk/debug/app-debug.apk Neon-Calculator-v1.4.apk
 
-      - name: Decode upload keystore (optional)
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
-        run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/upload.jks"
-          echo "KEYSTORE_PATH=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
-          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> "$GITHUB_ENV"
-          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> "$GITHUB_ENV"
-          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> "$GITHUB_ENV"
-
-      - name: Build signed release AAB (only when a keystore is configured)
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
-        run: gradle bundleRelease --no-daemon --stacktrace
-
-      - name: Keep the AAB
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
-        run: cp "$(find app/build/outputs/bundle/release -name '*.aab' | head -1)" Neon-Calculator-v1.4.aab
-
-      - name: Create release with APK (and AAB if built)
+      - name: Create release with APK
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          FILES="Neon-Calculator-v1.4.apk"
-          if [ -f Neon-Calculator-v1.4.aab ]; then FILES="$FILES Neon-Calculator-v1.4.aab"; fi
-          gh release create v1.4 $FILES \
-            --title "Neon Calculator v1.4 (API 35, Play-ready config)" \
-            --notes "targetSdk 35 / compileSdk 35 for Google Play. Debug APK for sideloading on Android 8.0+." \
-            || gh release upload v1.4 $FILES --clobber
+          gh release create v1.4 Neon-Calculator-v1.4.apk \
+            --title "Neon Calculator v1.4 (API 35)" \
+            --notes "compileSdk/targetSdk 35 for Google Play. Debug APK for sideloading on Android 8.0+." \
+            || gh release upload v1.4 Neon-Calculator-v1.4.apk --clobber
 
       - name: Prepare app.apk
         run: cp $(find app/build/outputs/apk -name '*.apk' | head -1) app.apk
